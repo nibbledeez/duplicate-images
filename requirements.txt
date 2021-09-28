@@ -7,7 +7,7 @@ ImageHash==3.4
 itsdangerous==1.1.0
 Jinja2==2.10
 MarkupSafe==1.1.1
-more-itertools==2.2
+more-itertools==8.10.0
 numpy==1.19.2
 olefile==0.46
 Pillow==8.3.2
