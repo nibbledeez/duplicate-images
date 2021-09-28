@@ -1,4 +1,4 @@
 mongomock==3.8.0
-pyfakefs==3.2
+pyfakefs==4.5.1
 pytest==6.2.5
 pytest-cov==2.5.1
