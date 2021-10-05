@@ -131,6 +131,9 @@ def hash_file(file):
             else:
                 turned_img = img
             hashes.append(str(imagehash.phash(turned_img)))
+            # also hash flipped image
+            flipped_img = turned_img.transpose(method=Image.FLIP_LEFT_RIGHT)
+            hashes.append(str(imagehash.phash(flipped_img)))
 
         hashes = ''.join(sorted(hashes))
 
