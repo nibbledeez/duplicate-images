@@ -3,7 +3,7 @@
 A tool to find and remove duplicate pictures.
 
 Usage:
-    duplicate_finder.py add <path> ... [--db=<db_path>] [--parallel=<num_processes>]
+    duplicate_finder.py add <path> ... [--flipped] [--db=<db_path>] [--parallel=<num_processes>]
     duplicate_finder.py remove <path> ... [--db=<db_path>]
     duplicate_finder.py clear [--db=<db_path>]
     duplicate_finder.py show [--db=<db_path>]
@@ -18,6 +18,8 @@ Options:
     --parallel=<num_processes> The number of parallel processes to run to hash the image
                                files (default: number of CPUs).
 
+    add:
+        --flipped             Also add flipped images
     find:
         --print               Only print duplicate files rather than displaying HTML file
         --delete              Move all found duplicate pictures to the trash. This option takes priority over --print.
@@ -46,6 +48,7 @@ from PIL import Image, ExifTags
 import pymongo
 from termcolor import cprint
 
+FLIPPED = False
 
 @contextmanager
 def connect_to_db(db_conn_string='./db'):
@@ -130,10 +133,15 @@ def hash_file(file):
                 turned_img = img.rotate(angle, expand=True)
             else:
                 turned_img = img
-            hashes.append(str(imagehash.phash(turned_img)))
+            string = str(imagehash.phash(turned_img))
+            if string not in hashes:
+                hashes.append(string)
             # also hash flipped image
-            flipped_img = turned_img.transpose(method=Image.FLIP_LEFT_RIGHT)
-            hashes.append(str(imagehash.phash(flipped_img)))
+            if FLIPPED:
+                flipped_img = turned_img.transpose(method=Image.FLIP_LEFT_RIGHT)
+                string = str(imagehash.phash(flipped_img))
+                if string not in hashes:
+                    hashes.append(string)
 
         hashes = ''.join(sorted(hashes))
 
@@ -350,6 +358,8 @@ if __name__ == '__main__':
 
     with connect_to_db(db_conn_string=DB_PATH) as db:
         if args['add']:
+            if args['--flipped']:
+                FLIPPED = True
             add(args['<path>'], db, NUM_PROCESSES)
         elif args['remove']:
             remove(args['<path>'], db)
