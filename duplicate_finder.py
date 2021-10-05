@@ -3,7 +3,7 @@
 A tool to find and remove duplicate pictures.
 
 Usage:
-    duplicate_finder.py add <path> ... [--flipped] [--db=<db_path>] [--parallel=<num_processes>]
+    duplicate_finder.py add <path> ... [--flipped] [--nomax] [--db=<db_path>] [--parallel=<num_processes>]
     duplicate_finder.py remove <path> ... [--db=<db_path>]
     duplicate_finder.py clear [--db=<db_path>]
     duplicate_finder.py show [--db=<db_path>]
@@ -20,6 +20,7 @@ Options:
 
     add:
         --flipped             Also add flipped images
+        --nomax               No maximum file size
     find:
         --print               Only print duplicate files rather than displaying HTML file
         --delete              Move all found duplicate pictures to the trash. This option takes priority over --print.
@@ -360,6 +361,8 @@ if __name__ == '__main__':
         if args['add']:
             if args['--flipped']:
                 FLIPPED = True
+            if args['--nomax']:
+                Image.MAX_IMAGE_PIXELS = None
             add(args['<path>'], db, NUM_PROCESSES)
         elif args['remove']:
             remove(args['<path>'], db)
