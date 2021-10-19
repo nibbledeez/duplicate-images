@@ -31,6 +31,7 @@ Options:
 
 import concurrent.futures
 from contextlib import contextmanager
+from datetime import datetime
 import os
 import magic
 import math
@@ -125,6 +126,7 @@ def hash_file(file):
         img = Image.open(file)
 
         file_size = get_file_size(file)
+        file_time = get_file_time(file)
         image_size = get_image_size(img)
         capture_time = get_capture_time(img)
 
@@ -147,7 +149,7 @@ def hash_file(file):
         hashes = ''.join(sorted(hashes))
 
         cprint("\tHashed {}".format(file), "blue")
-        return file, hashes, file_size, image_size, capture_time
+        return file, hashes, file_size, file_time, image_size, capture_time
     except OSError:
         cprint("\tUnable to open {}".format(file), "red")
         return None
@@ -160,11 +162,12 @@ def hash_files_parallel(files, num_processes=None):
                 yield result
 
 
-def _add_to_database(file_, hash_, file_size, image_size, capture_time, db):
+def _add_to_database(file_, hash_, file_size, file_time, image_size, capture_time, db):
     try:
         db.insert_one({"_id": file_,
                        "hash": hash_,
                        "file_size": file_size,
+                       "file_time": file_time,
                        "image_size": image_size,
                        "capture_time": capture_time})
     except pymongo.errors.DuplicateKeyError:
@@ -239,6 +242,7 @@ def find(db, match_time=False):
                 "$push": {
                     "file_name": "$_id",
                     "file_size": "$file_size",
+                    "file_time": "$file_time",
                     "image_size": "$image_size",
                     "capture_time": "$capture_time"
                 }
@@ -318,6 +322,13 @@ def display_duplicates(duplicates, db, trash="./Trash/"):
 def get_file_size(file_name):
     try:
         return os.path.getsize(file_name)
+    except FileNotFoundError:
+        return 0
+
+
+def get_file_time(file_name):
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(file_name)).strftime('%Y:%m:%d, %H:%M:%S')
     except FileNotFoundError:
         return 0
 

@@ -14,10 +14,11 @@
             <h5 class="name">{{ img['file_name'] }}</h5>
             <div class="file-size">{{ img['file_size'] | filesizeformat }}</div>
             <div class="resolution">{{ img['image_size'] }}</div>
+            <div class="file-time">FILE {{ img['file_time'] }}</div>
             {% if img['capture_time'] == 'Time unknown' %}
-            <div class="capture-time"><strong>{{ img['capture_time'] }}</strong></div>
+            <div class="capture-time">EXIF <strong>{{ img['capture_time'] }}</strong></div>
             {% else %}
-            <div class="capture-time">{{ img['capture_time'] }}</div>
+            <div class="capture-time">EXIF {{ img['capture_time'] }}</div>
             {% endif %}
             <button class="btn btn-danger delete-btn" role="button" data-name="{{ img['file_name'] }}" style="margin-top: 15px">
                 Delete
