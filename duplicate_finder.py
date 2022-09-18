@@ -303,7 +303,7 @@ def display_duplicates(duplicates, db, trash="./Trash/"):
 
     with TemporaryDirectory() as folder:
         # Generate all of the HTML files
-        chunk_size = 25
+        chunk_size = 50
         for i, dups in enumerate(chunked(duplicates, chunk_size)):
             with open('{}/{}.html'.format(folder, i), 'w') as f:
                 f.write(render(dups,
