@@ -3,7 +3,7 @@
 A tool to find and remove duplicate pictures.
 
 Usage:
-    duplicate_finder.py add <path> ... [--db=<db_path>] [--parallel=<num_processes>]
+    duplicate_finder.py add <path> ... [--flipped] [--nomax] [--db=<db_path>] [--parallel=<num_processes>]
     duplicate_finder.py remove <path> ... [--db=<db_path>]
     duplicate_finder.py clear [--db=<db_path>]
     duplicate_finder.py show [--db=<db_path>]
@@ -18,6 +18,9 @@ Options:
     --parallel=<num_processes> The number of parallel processes to run to hash the image
                                files (default: number of CPUs).
 
+    add:
+        --flipped             Also add flipped images
+        --nomax               No maximum file size
     find:
         --print               Only print duplicate files rather than displaying HTML file
         --delete              Move all found duplicate pictures to the trash. This option takes priority over --print.
@@ -28,6 +31,7 @@ Options:
 
 import concurrent.futures
 from contextlib import contextmanager
+from datetime import datetime
 import os
 import magic
 import math
@@ -46,6 +50,7 @@ from PIL import Image, ExifTags
 import pymongo
 from termcolor import cprint
 
+FLIPPED = False
 
 @contextmanager
 def connect_to_db(db_conn_string='./db'):
@@ -122,6 +127,7 @@ def hash_file(file):
         img = Image.open(file)
 
         file_size = get_file_size(file)
+        file_time = get_file_time(file)
         image_size = get_image_size(img)
         capture_time = get_capture_time(img)
 
@@ -131,12 +137,20 @@ def hash_file(file):
                 turned_img = img.rotate(angle, expand=True)
             else:
                 turned_img = img
-            hashes.append(str(imagehash.phash(turned_img)))
+            string = str(imagehash.phash(turned_img))
+            if string not in hashes:
+                hashes.append(string)
+            # also hash flipped image
+            if FLIPPED:
+                flipped_img = turned_img.transpose(method=Image.FLIP_LEFT_RIGHT)
+                string = str(imagehash.phash(flipped_img))
+                if string not in hashes:
+                    hashes.append(string)
 
         hashes = ''.join(sorted(hashes))
 
         cprint("\tHashed {}".format(file), "blue")
-        return file, hashes, file_size, image_size, capture_time
+        return file, hashes, file_size, file_time, image_size, capture_time
     except OSError:
         cprint("\tUnable to open {}".format(file), "red")
         return None
@@ -149,11 +163,12 @@ def hash_files_parallel(files, num_processes=None):
                 yield result
 
 
-def _add_to_database(file_, hash_, file_size, image_size, capture_time, db):
+def _add_to_database(file_, hash_, file_size, file_time, image_size, capture_time, db):
     try:
         db.insert_one({"_id": file_,
                        "hash": hash_,
                        "file_size": file_size,
+                       "file_time": file_time,
                        "image_size": image_size,
                        "capture_time": capture_time})
     except pymongo.errors.DuplicateKeyError:
@@ -228,6 +243,7 @@ def find(db, match_time=False):
                 "$push": {
                     "file_name": "$_id",
                     "file_size": "$file_size",
+                    "file_time": "$file_time",
                     "image_size": "$image_size",
                     "capture_time": "$capture_time"
                 }
@@ -288,7 +304,7 @@ def display_duplicates(duplicates, db, trash="./Trash/"):
 
     with TemporaryDirectory() as folder:
         # Generate all of the HTML files
-        chunk_size = 25
+        chunk_size = 50
         for i, dups in enumerate(chunked(duplicates, chunk_size)):
             with open('{}/{}.html'.format(folder, i), 'w') as f:
                 f.write(render(dups,
@@ -307,6 +323,13 @@ def display_duplicates(duplicates, db, trash="./Trash/"):
 def get_file_size(file_name):
     try:
         return os.path.getsize(file_name)
+    except FileNotFoundError:
+        return 0
+
+
+def get_file_time(file_name):
+    try:
+        return datetime.fromtimestamp(os.path.getmtime(file_name)).strftime('%Y:%m:%d, %H:%M:%S')
     except FileNotFoundError:
         return 0
 
@@ -349,6 +372,10 @@ if __name__ == '__main__':
 
     with connect_to_db(db_conn_string=DB_PATH) as db:
         if args['add']:
+            if args['--flipped']:
+                FLIPPED = True
+            if args['--nomax']:
+                Image.MAX_IMAGE_PIXELS = None
             add(args['<path>'], db, NUM_PROCESSES)
         elif args['remove']:
             remove(args['<path>'], db)

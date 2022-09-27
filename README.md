@@ -45,6 +45,24 @@ sudo systemctl disable mongodb.service
 sudo service mongodb stop
 ```
 
+Alternatively, install MongoDB from https://www.mongodb.com/docs/manual/tutorial/install-mongodb-on-ubuntu/
+
+    sudo apt-get install -y mongodb-org
+    sudo systemctl status mongod
+
+See also https://stackoverflow.com/questions/37565758/mongodb-not-working-on-ubuntu-mongod-service-failed-with-result-exit-code and https://medium.com/@balasubramanim/how-to-resolve-socketexception-address-already-in-use-mongodb-75fa8ea4a2a6 Note that restarting has to be done with
+
+    sudo systemctl start mongod
+
+Workaround if problems keep arising is to run duplicate_finder.py with sudo. When
+running as root and http://127.0.0.1:5000 give the error 'Not Found', open with
+Firefox (not Chrome or Chromium from flathub) the URL file:///tmp/tmp......../0.html
+Perhaps even do a chown -R yourusername.yourusername on /tmp/tmp......../ first.
+
+In case pip3 has problems:
+
+    apt-get install -y python3-numpy python3-scipy python3-pywt
+
 Python 2 is the default version of Python, so we have to call `python3` explicitely:
 
 ```bash
