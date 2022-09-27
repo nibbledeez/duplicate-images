@@ -15,7 +15,7 @@ numpy==1.23.3
 olefile==0.46
 pip==22.2.2
 pymongo==3.11.0
-python-magic==0.4.15
+python-magic==0.4.27
 scipy==1.5.3
 setuptools==44.0.0
 six==1.15.0
