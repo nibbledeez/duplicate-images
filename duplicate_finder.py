@@ -102,6 +102,7 @@ def get_image_files(path):
     :param path:
     :return: yield absolute path
     """
+
     def is_image(file_name):
         # List mime types fully supported by Pillow
         full_supported_formats = ['gif', 'jp2', 'jpeg', 'pcx', 'png', 'tiff', 'x-ms-bmp',
@@ -131,7 +132,7 @@ def hash_file(file):
         capture_time = get_capture_time(img)
 
         # hash the image 4 times and rotate it by 90 degrees each time
-        for angle in [ 0, 90, 180, 270 ]:
+        for angle in [0, 90, 180, 270]:
             if angle > 0:
                 turned_img = img.rotate(angle, expand=True)
             else:
@@ -175,7 +176,7 @@ def _add_to_database(file_, hash_, file_size, file_time, image_size, capture_tim
 
 
 def _in_database(file, db):
-    return db.count({"_id": file}) > 0
+    return db.count_documents({"_id": file}) > 0
 
 
 def new_image_files(files, db):
@@ -216,7 +217,7 @@ def clear(db):
 
 
 def show(db):
-    total = db.count()
+    total = db.count_documents({})
     pprint(list(db.find()))
     print("Total: {}".format(total))
 
@@ -249,11 +250,11 @@ def find(db, match_time=False):
             }
         }
     },
-    {
-        "$match": {
-            "total": {"$gt": 1}
-        }
-    }])
+        {
+            "$match": {
+                "total": {"$gt": 1}
+            }
+        }])
 
     if match_time:
         dups = (d for d in dups if same_time(d))
@@ -351,6 +352,7 @@ def get_capture_time(img):
 
 if __name__ == '__main__':
     from docopt import docopt
+
     args = docopt(__doc__)
 
     if args['--trash']:
