@@ -3,7 +3,7 @@ Flask==2.2.2
 ImageHash==4.3.0
 Jinja2==3.1.2
 MarkupSafe==2.1.1
-Pillow==9.2.0
+Pillow==9.4.0
 PyWavelets==1.1.1
 Werkzeug==2.2.2
 click==8.1.3
